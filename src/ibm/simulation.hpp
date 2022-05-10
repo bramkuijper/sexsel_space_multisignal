@@ -25,7 +25,12 @@ struct Parameters
     // based on male-male competition
     double t_comp_init = 0.0;
 
-    int Npatches = 100;
+    double v_env_init = 0.5;
+
+    unsigned nm = 10;
+    unsigned nf = 10;
+
+    unsigned Npatches = 50;
     double d = 0.5;
 
     long unsigned max_time = 50000;
@@ -68,7 +73,7 @@ class Simulation
         std::random_device rd;
         std::mt19937 rng_r;
         std::uniform_real_distribution<double> uniform;
-        long unsigned time_step
+        long unsigned time_step;
     public:
 
         Parameters parms;
@@ -79,6 +84,9 @@ class Simulation
 
         void initialize_patches();
         void initialize_output_file();
+        void offspring_production_and_survival();
+        void male_male_competition();
+        void female_choice();
 };
 
 #endif

@@ -34,16 +34,6 @@ Simulation::Simulation(Parameters const &parameters) :
 } // Simulation::Simulation()
 
 
-// production of offspring by females and survival
-// based on that
-void Simulation::offspring_production_and_survival()
-{
-    for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
-    {
-
-    }
-} // Simulation::offspring_production_and_survival
-
 // initialize the data files
 void Simulation::initialize_output_file()
 {
@@ -59,17 +49,25 @@ void Simulation::initialize_patches()
     {
         // make a default individual 
         // and use this to initialize patches
+        //
+        // see individual.hpp and individual.cpp for definitions
+        // of the individual
         Individual a_individual(
                     parms.p_loc_init
                     ,parms.t_loc_init
                     ,parms.p_comp_init
                     ,parms.t_comp_init
-                    ,parms.venv
+                    ,parms.v_env_init
                 );
+
         // make a patch and then initialize it
+        // see patch.cpp and patch.hpp
         Patch current_patch(
-                parms.nm
-                ,
+                parms.nm // number males
+                ,a_individual // the standard male with which to initialize all males
+                ,parms.nf // number of females
+                ,a_individual // the standard female with which to initialize all females
+                ,uniform(rng_r)
                 );
 
         // give patches an environmental variable
@@ -84,3 +82,29 @@ void Simulation::initialize_patches()
 
     } // end for patch_idx
 } // end Simulation::initialize_patches()
+
+
+// environmental survival of juveniles
+
+// production of offspring by females and survival
+// based on that
+void Simulation::offspring_production_and_survival()
+{
+    // auxiliary variable containing the carrying capacity of a patch
+    double K;
+
+    // go through all the patches and perform births
+    for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
+    {
+        
+    }
+} // Simulation::offspring_production_and_survival
+
+
+
+// competition among males dependent on hawk dove game
+void Simulation::male_male_competition()
+{}
+
+void Simulation::female_choice()
+{}

@@ -36,6 +36,8 @@ class Individual
         Individual(Individual const &other);
 
         void operator=(Individual const &other);
+
+
 };
 
 

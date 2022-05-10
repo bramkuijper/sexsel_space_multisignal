@@ -40,6 +40,6 @@ void Individual::operator=(Individual const &other)
         t_loc[allele_idx] = other.t_loc[allele_idx];
         p_comp[allele_idx] = other.p_comp[allele_idx];
         t_comp[allele_idx] = other.t_comp[allele_idx];
-        v_env[allele_idx] = v_env.t_comp[allele_idx];
+        v_env[allele_idx] = other.v_env[allele_idx];
     }
 }
