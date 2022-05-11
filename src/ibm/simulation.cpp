@@ -34,7 +34,7 @@ Simulation::Simulation(Parameters const &parameters) :
 } // Simulation::Simulation()
 
 
-// initialize the data files
+// initialize the data files used to output the simulation results
 void Simulation::initialize_output_file()
 {
     output_file << "mean_p_loc;mean_t_loc;mean_p_comp;mean_t_comp;mean_envt;mean_v_env;";
