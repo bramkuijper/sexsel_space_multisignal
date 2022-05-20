@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.10)
 set(EXE_NAME_IND_TEST "sexsel_space_ind_tests")
 set(EXE_NAME_SIM_TEST "sexsel_space_sim_tests")
 set(EXE_NAME_PATCH_TEST "sexsel_space_patch_tests")
+set(EXE_NAME "sexsel_space")
 
 
 # google test url
@@ -41,6 +42,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 enable_testing()
+add_executable(
+    "${EXE_NAME}"
+    main.cpp
+)
+
+target_link_libraries(
+    "${EXE_NAME}" 
+    sexsel_library
+)
+
+target_include_directories(
+    "${EXE_NAME}" 
+    PUBLIC
+    "${PROJECT_BINARY_DIR}"
+    )
+
 
 add_executable(
     "${EXE_NAME_IND_TEST}"
@@ -52,6 +69,12 @@ target_link_libraries(
     gtest_main
     sexsel_library
 )
+
+target_include_directories(
+    "${EXE_NAME_IND_TEST}" 
+    PUBLIC
+    "${PROJECT_BINARY_DIR}"
+    )
 
 add_executable(
     "${EXE_NAME_SIM_TEST}"
@@ -65,11 +88,6 @@ target_link_libraries(
 )
 
 
-target_include_directories(
-    "${EXE_NAME_IND_TEST}" 
-    PUBLIC
-    "${PROJECT_BINARY_DIR}"
-    )
 target_include_directories(
     "${EXE_NAME_SIM_TEST}" 
     PUBLIC

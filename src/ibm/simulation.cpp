@@ -72,7 +72,7 @@ void Simulation::initialize_patches()
 
         // give patches an environmental variable
         // along a 0 to 1 uniform distribution
-        current_patch.env = uniform(rng_r);
+        current_patch.coordinate = uniform(rng_r);
 
         // now create males and females
 
@@ -91,16 +91,35 @@ void Simulation::initialize_patches()
 void Simulation::offspring_production_and_survival()
 {
     // auxiliary variable containing the carrying capacity of a patch
-    double K;
+    double k;
 
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
     {
-        
-    }
+        k = carrying_capacity(metapop[patch_idx].coordinate);
+
+        // iterate over all the males and 
+        // have them survive
+        for (std::vector<Individual>::iterator iter_males = metapop[patch_idx].end()
+                ,iter_males != metapop[patch_idx].end()
+                ,++iter_males)
+        {
+            // 
+            if ()
+            {
+            }
+        }
+    } // end for unsigned patch_idx
 } // Simulation::offspring_production_and_survival
 
-
+// calculate unidimensional carrying capacity according to eq S1
+// from MGonigle et al 2012 Nature 484: 506
+double Simulation::carrying_capacity(double const coordinate)
+{
+    return(parms.k0 * (
+                parms.b + exp(-(environment_location - 0.5)*
+                    (coordinate - 0.5)/(2 * parms.sigma_k * parms.sigma_k))));
+}
 
 // competition among males dependent on hawk dove game
 void Simulation::male_male_competition()

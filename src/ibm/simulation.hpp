@@ -25,16 +25,24 @@ struct Parameters
     // based on male-male competition
     double t_comp_init = 0.0;
 
+    // initial value of the local adaptation locus
     double v_env_init = 0.5;
 
+    // number of males and females
+    // per patch
     unsigned nm = 10;
     unsigned nf = 10;
 
+    // number of patches in the population
     unsigned Npatches = 50;
+
+    // dispersal
     double d = 0.5;
 
+    // maximum time 
     long unsigned max_time = 50000;
 
+    // the prefix of the file name
     std::string base_name = "";
 
     // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
@@ -51,16 +59,14 @@ struct Parameters
         strftime(buf, sizeof(buf), "%Y_%m_%d_%H_%M_%S", &tstruct);
 
         return buf;
-    }
+    } // end currentDateTime
 
     // constructor function of the parameter object
     // I do this to initialize the output 
     // file to something sensible
     Parameters() :
-        base_name{"sim_sexsel_space_" + currentDateTime()}
-//        base_name{"sim_sexsel_space_" + "hoi"}
-    {
-    }
+        base_name{"sim_sexsel_space_" + currentDateTime()} // upon construction, initialize the file name
+    {}
 };
 
 // the simulation class which is the overarching
@@ -82,11 +88,21 @@ class Simulation
 
         Simulation(Parameters const &parameters);
 
+        // function that initializes all the patches
+        // and their contents (breeders, environments)
         void initialize_patches();
+
+        // initialize the data files
         void initialize_output_file();
+
         void offspring_production_and_survival();
+
         void male_male_competition();
+
         void female_choice();
-};
+
+        double carrying_capacity(double const environment_location);
+
+}; // end Simulation class definition
 
 #endif

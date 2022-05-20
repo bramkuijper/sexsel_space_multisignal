@@ -46,6 +46,9 @@ ggplot(data=the.data
 ggsave("contour_carrying_capacity.pdf")
 
 
+k0 <- 0.5
+b <- 1.0
+
 k.uni <- function(x) {
 
     k.out <- 0.0
