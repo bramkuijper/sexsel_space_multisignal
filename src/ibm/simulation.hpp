@@ -39,8 +39,20 @@ struct Parameters
     // dispersal
     double d = 0.5;
 
+
+    // baseline carrying capacity
+    double b = 0.0;
+
+    // scalar to set the maximum carrying capacity
+    // see M'Gonigle's supp
+    double k0 = 1.0;
+
+
     // maximum time 
     long unsigned max_time = 50000;
+
+    // spatial variance in carrying capacity
+    double sigma_k = 0.5;
 
     // the prefix of the file name
     std::string base_name = "";

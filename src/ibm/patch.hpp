@@ -12,7 +12,7 @@ class Patch
         std::vector<Individual> males;
         std::vector<Individual> females;
 
-        double env;
+        double coordinate;
 
         // default constructor, which sets everything to a default of 0
         Patch();

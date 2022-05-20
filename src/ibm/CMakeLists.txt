@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.10)
 set(EXE_NAME_IND_TEST "sexsel_space_ind_tests")
 set(EXE_NAME_SIM_TEST "sexsel_space_sim_tests")
 set(EXE_NAME_PATCH_TEST "sexsel_space_patch_tests")
-set(EXE_NAME "sexsel_space")
+set(EXE_NAME "simulation_main")
 
 
 # google test url

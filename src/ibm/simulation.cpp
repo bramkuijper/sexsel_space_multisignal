@@ -100,14 +100,10 @@ void Simulation::offspring_production_and_survival()
 
         // iterate over all the males and 
         // have them survive
-        for (std::vector<Individual>::iterator iter_males = metapop[patch_idx].end()
-                ,iter_males != metapop[patch_idx].end()
-                ,++iter_males)
+        for (std::vector<Individual>::iterator iter_males = metapop[patch_idx].males.begin();
+                iter_males != metapop[patch_idx].males.end();
+                ++iter_males)
         {
-            // 
-            if ()
-            {
-            }
         }
     } // end for unsigned patch_idx
 } // Simulation::offspring_production_and_survival
@@ -117,7 +113,7 @@ void Simulation::offspring_production_and_survival()
 double Simulation::carrying_capacity(double const coordinate)
 {
     return(parms.k0 * (
-                parms.b + exp(-(environment_location - 0.5)*
+                parms.b + exp(-(coordinate - 0.5)*
                     (coordinate - 0.5)/(2 * parms.sigma_k * parms.sigma_k))));
 }
 
