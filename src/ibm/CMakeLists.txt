@@ -24,9 +24,11 @@ project(sexsel_space_multisignal)
 
 add_library(sexsel_library individual.cpp simulation.cpp patch.cpp)
 
-# make sure it is c++11
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# make sure it is c++17
+# as we will use std::sample() which is only
+# available in c++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # now adding the google mock testing framework
 # see: https://google.github.io/googletest/quickstart-cmake.html

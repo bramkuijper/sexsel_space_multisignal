@@ -93,18 +93,18 @@ void Simulation::offspring_production_and_survival()
     // auxiliary variable containing the carrying capacity of a patch
     double k;
 
+    int nmales_sampled;
+    int nfemales_sampled;
+
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
     {
         k = carrying_capacity(metapop[patch_idx].coordinate);
+        
+        :
 
-        // iterate over all the males and 
-        // have them survive
-        for (std::vector<Individual>::iterator iter_males = metapop[patch_idx].males.begin();
-                iter_males != metapop[patch_idx].males.end();
-                ++iter_males)
-        {
-        }
+
+        // sample the actual number of 
     } // end for unsigned patch_idx
 } // Simulation::offspring_production_and_survival
 
