@@ -1,4 +1,6 @@
+#include <unordered_set>
 #include "simulation.hpp"
+#include "parameters.hpp"
 #include "patch.hpp"
 
 //! construct a simulation object
@@ -20,7 +22,7 @@ Simulation::Simulation(Parameters const &parameters) :
     for (time_step = 0; time_step < parms.max_time; ++time_step)
     {
         // environmental survival of juveniles
-        offspring_production_and_survival();
+        survive_carrying_capacity();
 
         male_male_competition();
 
@@ -30,6 +32,8 @@ Simulation::Simulation(Parameters const &parameters) :
         // adaptation 
         // 2. male-male competition
         female_choice();
+
+        offspring_production();
     }
 } // Simulation::Simulation()
 
@@ -74,21 +78,15 @@ void Simulation::initialize_patches()
         // along a 0 to 1 uniform distribution
         current_patch.coordinate = uniform(rng_r);
 
-        // now create males and females
-
         metapop.push_back(current_patch);
-
-
-
     } // end for patch_idx
 } // end Simulation::initialize_patches()
 
 
 // environmental survival of juveniles
 
-// production of offspring by females and survival
-// based on that
-void Simulation::offspring_production_and_survival()
+// survival based on carrying capacity
+void Simulation::survive_carrying_capacity()
 {
     // auxiliary variable containing the carrying capacity of a patch
     double k;
@@ -96,8 +94,11 @@ void Simulation::offspring_production_and_survival()
     int nmales_sampled;
     int nfemales_sampled;
 
-    std::vector <int> males_sampled;
-    std::vector <int> females_sampled;
+    std::unordered_set<int> males_sampled;
+    std::unordered_set<int> females_sampled;
+
+    std::vector<Individual> surviving_males;
+    std::vector<Individual> surviving_females;
 
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
@@ -105,37 +106,57 @@ void Simulation::offspring_production_and_survival()
         // survival probability based on carrying capacity
         k = carrying_capacity(metapop[patch_idx].coordinate);
 
-        // make a sampler out of a binomial distribution
-        std::binomial_distribution<int> male_sampler{
-            metapop[patch_idx].males.size(), k};
+        // sample surviving males and females
 
-        // sample number of males
-        nmales_sampled = males_sampler(rng_r);
+        // how many males will survive?
+        // make a binomial distribution 
+        // with parameters 
+        // 1) the number of males
+        // 2) the probability of surviving, k 
+        std::binomial_distribution<int> nmale_sample_dist(
+                metapop[patch_idx].males.size()
+                ,k);
+
+        nmales_sampled = nmale_sample_dist(rng_r);
+
+        sample_k_out_of_n(metapop[patch_idx].males.size() - 1
+                ,nmales_sampled
+                ,males_sampled);
+
+        // loop through all males and have them survive
+        for (std::unordered_set<int>::iterator males_iter = males_sampled.begin();
+                males_iter != males_sampled.end();
+                ++males_iter)
+        {
+            surviving_males.push_back(metapop[patch_idx].males[*males_iter]);
+        }
+        // now the females
+
+        std::binomial_distribution<int> nfemale_sample_dist(
+                metapop[patch_idx].females.size()
+                ,k);
+
+        nfemales_sampled = nfemale_sample_dist(rng_r);
+
+        sample_k_out_of_n(metapop[patch_idx].males.size() - 1
+                ,nfemales_sampled
+                ,females_sampled);
+
+        // loop through all males and have them survive
+        for (std::unordered_set<int>::iterator females_iter = females_sampled.begin();
+                females_iter != females_sampled.end();
+                ++females_iter)
+        {
+            surviving_females.push_back(metapop[patch_idx].females[*females_iter]);
+        }
+
+        // keep survivors
+       metapop[patch_idx].males = surviving_males;
+       metapop[patch_idx].females = surviving_females;
 
     } // end for unsigned patch_idx
-} // Simulation::offspring_production_and_survival
 
-// Floyd's algorithm to sample k individuals out of a 
-// list of N 
-void Simulation::sample_k_from_range(
-        int const N, 
-        int const k, 
-        std::vector <int> &sampled_vector)
-{
-    sampled_vector.clear();
-
-    for (int r = N - k; r < N; ++r)
-    {
-        int v = std::uniform_int_distribution<int>(0,r)(rng_r);
-
-        if (!elems.insert(v))
-        {
-
-
-    } // end for
-
-
-}
+} // Simulation::survive_carrying_capacity
 
 
 // calculate unidimensional carrying capacity according to eq S1
@@ -147,9 +168,52 @@ double Simulation::carrying_capacity(double const coordinate)
                     (coordinate - 0.5)/(2 * parms.sigma_k * parms.sigma_k))));
 }
 
+// sample k out of n individuals
+// this is floyd's algorithm, see
+// https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement 
+void Simulation::sample_k_out_of_n(
+        int const N
+        ,int const k
+        ,std::unordered_set<int> &individuals_sampled)
+{
+    individuals_sampled.clear();
+
+    for (int r = N - k; r < N; ++r)
+    {
+        int v = std::uniform_int_distribution<int>(0,r)(rng_r);
+
+        // second tells you whether v was successfully inserted
+        // into the unordered set elems. However, if v was already
+        // in elems previously, it will not be inserted again (coz, sets)
+        // and then second is false
+        if (!individuals_sampled.insert(v).second)
+        {
+            individuals_sampled.insert(r);
+        }
+    }
+}
+
 // competition among males dependent on hawk dove game
 void Simulation::male_male_competition()
 {}
 
 void Simulation::female_choice()
-{}
+{
+    // go through all the patches and perform choice
+    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
+            patch_iter != metapop.end(); 
+            ++patch_iter)
+    {
+        for (std::vector<Individual>::iterator female_iter = patch_iter->females.begin(); 
+                female_iter != patch_iter->females.end(); 
+                ++female_iter)
+        {
+            std::cout << "female?" << std::endl;
+        }
+    }
+}
+
+// produce a bunch of offspring
+void Simulation::offspring_production()
+{
+}
