@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include "simulation.hpp"
 #include "patch.hpp"
 
@@ -96,15 +97,63 @@ void Simulation::offspring_production_and_survival()
     int nmales_sampled;
     int nfemales_sampled;
 
+    std::unordered_set<int> males_sampled;
+    std::unordered_set<int> females_sampled;
+
+    std::vector<Individual> males_nextgen;
+    std::vector<Individual> females_nextgen;
+
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
     {
+        males_nextgen.clear();
+        females_nextgen.clear();
+
         k = carrying_capacity(metapop[patch_idx].coordinate);
-        
-        :
+
+        // how many males will survive?
+        // make a binomial distribution 
+        // with parameters 
+        // 1) the number of males
+        // 2) the probability of surviving, k 
+        std::binomial_distribution<int> sample_individuals(
+                metapop[patch_idx].males.size()
+                ,k);
+
+        nmales_sampled = sample_individuals(rng_r);
+
+        sample_k_out_of_n(metapop[patch_idx].males.size() - 1
+                ,nmales_sampled
+                ,males_sampled);
+
+        // loop through all males and have them survive
+        for (std::unordered_set<int>::iterator males_iter = males_sampled.begin()
+                ,males_iter != males_sampled.end();
+                ++males_iter)
+        {
+            males_nextgen.push_back(males[*males_iter]);
+        }
 
 
-        // sample the actual number of 
+        // now the females
+
+        std::binomial_distribution<int> sample_individuals(
+                metapop[patch_idx].females.size()
+                ,k);
+
+        nfemales_sampled = sample_individuals(rng_r);
+
+        sample_k_out_of_n(metapop[patch_idx].males.size() - 1
+                ,nfemales_sampled
+                ,females_sampled);
+
+        // loop through all males and have them survive
+        for (std::unordered_set<int>::iterator females_iter = females_sampled.begin()
+                ,females_iter != females_sampled.end();
+                ++females_iter)
+        {
+            females_nextgen.push_back(females[*females_iter]);
+        }
     } // end for unsigned patch_idx
 } // Simulation::offspring_production_and_survival
 
@@ -115,6 +164,29 @@ double Simulation::carrying_capacity(double const coordinate)
     return(parms.k0 * (
                 parms.b + exp(-(coordinate - 0.5)*
                     (coordinate - 0.5)/(2 * parms.sigma_k * parms.sigma_k))));
+}
+
+// sample k out of n individuals
+void Simulation::sample_k_out_of_n(
+        int const N
+        ,int const k
+        ,std::unordered_set<int> &individuals_sampled)
+{
+    individuals_sampled.clear();
+
+    for (int r = N - k; r < N; ++r)
+    {
+        int v = std::uniform_int_distribution<int>(0,r)(rng_r);
+
+        // second tells you whether v was successfully inserted
+        // into the unordered set elems. However, if v was already
+        // in elems previously, it will not be inserted again (coz, sets)
+        // and then second is false
+        if (!elems.insert(v).second)
+        {
+            elems.insert(r);
+        }
+    }
 }
 
 // competition among males dependent on hawk dove game

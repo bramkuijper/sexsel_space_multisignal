@@ -2,6 +2,7 @@
 #define _SIMULATION_HPP_
 
 #include <vector>
+#include <unordered_set>
 #include <random>
 #include <iostream>
 #include <fstream>
@@ -115,6 +116,11 @@ class Simulation
 
         double carrying_capacity(double const environment_location);
 
+        // sample k individuals out of n
+        void sample_k_out_of_n(
+                int const N
+                ,int const k
+                ,std::unordered_set<int> &individuals_sampled);
 }; // end Simulation class definition
 
 #endif
