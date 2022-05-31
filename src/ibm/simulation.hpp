@@ -49,7 +49,7 @@ struct Parameters
 
 
     // maximum time 
-    long unsigned max_time = 50000;
+    long unsigned max_time = 100;
 
     // spatial variance in carrying capacity
     double sigma_k = 0.5;
@@ -107,13 +107,21 @@ class Simulation
         // initialize the data files
         void initialize_output_file();
 
+        // function governing offspring production and survival
         void offspring_production_and_survival();
+
 
         void male_male_competition();
 
         void female_choice();
 
         double carrying_capacity(double const environment_location);
+
+        void sample_k_from_range(
+            int const N, 
+            int const k, 
+            std::vector <int> &sampled_vector)
+{
 
 }; // end Simulation class definition
 

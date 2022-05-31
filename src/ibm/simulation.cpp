@@ -96,17 +96,47 @@ void Simulation::offspring_production_and_survival()
     int nmales_sampled;
     int nfemales_sampled;
 
+    std::vector <int> males_sampled;
+    std::vector <int> females_sampled;
+
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
     {
+        // survival probability based on carrying capacity
         k = carrying_capacity(metapop[patch_idx].coordinate);
-        
-        :
 
+        // make a sampler out of a binomial distribution
+        std::binomial_distribution<int> male_sampler{
+            metapop[patch_idx].males.size(), k};
 
-        // sample the actual number of 
+        // sample number of males
+        nmales_sampled = males_sampler(rng_r);
+
     } // end for unsigned patch_idx
 } // Simulation::offspring_production_and_survival
+
+// Floyd's algorithm to sample k individuals out of a 
+// list of N 
+void Simulation::sample_k_from_range(
+        int const N, 
+        int const k, 
+        std::vector <int> &sampled_vector)
+{
+    sampled_vector.clear();
+
+    for (int r = N - k; r < N; ++r)
+    {
+        int v = std::uniform_int_distribution<int>(0,r)(rng_r);
+
+        if (!elems.insert(v))
+        {
+
+
+    } // end for
+
+
+}
+
 
 // calculate unidimensional carrying capacity according to eq S1
 // from MGonigle et al 2012 Nature 484: 506
