@@ -23,6 +23,10 @@ class Simulation
         std::mt19937 rng_r;
         std::uniform_real_distribution<double> uniform;
         long unsigned time_step;
+
+        int mean_survivors_f = 0;
+        int mean_survivors_m = 0;
+
     public:
 
         Parameters parms;
@@ -54,6 +58,10 @@ class Simulation
                 int const N
                 ,int const k
                 ,std::unordered_set<int> &individuals_sampled);
+
+
+        void write_data();
+        void write_parameters();
 }; // end Simulation class definition
 
 #endif
