@@ -22,6 +22,12 @@ struct Parameters
     // initial value of the local adaptation locus
     double v_env_init = 0.5;
 
+    // strength of survival selection against ornamentation
+    double ct = 0.01;
+    double cp = 0.01;
+
+    double vstrength = 0.01;
+
     // number of males and females
     // per patch
     unsigned nm = 10;

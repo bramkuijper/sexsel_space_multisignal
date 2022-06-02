@@ -1,4 +1,5 @@
 #include <unordered_set>
+#include <cassert>
 #include "simulation.hpp"
 #include "parameters.hpp"
 #include "patch.hpp"
@@ -9,7 +10,7 @@
 //!                     parameters that are needed to run the simulation
 Simulation::Simulation(Parameters const &parameters) :
     rng_r(rd()) // initialize the random number generator with a random_device
-    ,uniform(0.0,0.01) // initialize a uniform (0,1) distribution
+    ,uniform(0.0,1.0) // initialize a uniform (0,1) distribution
     ,output_file(parameters.base_name.c_str())
     ,parms{parameters} // initialize the parameter member variable
 {
@@ -108,94 +109,111 @@ void Simulation::initialize_patches()
     } // end for patch_idx
 } // end Simulation::initialize_patches()
 
+// male survival probability
+double Simulation::male_survival_probability(double envt, Individual &male_i)
+{
+    // express ornament locus
+    double t = male_i.t_loc[0] + male_i.t_loc[1];
 
-// environmental survival of juveniles
+    // express local adaptation locus
+    double v = male_i.v_env[0] + male_i.v_env[1];
+
+    // ornament based survival is exp(-ct * t^2) as in Iwasa et al 1991
+    // Evolution 45: 1431
+    //
+    // this is a revealing handicap - see p1437 2nd column, last paragraph
+    //
+    // viability based survival is based on local adaptation, where a
+    // good match with the local environment raises survival prospects
+    // according to a bell shaped function exp(-vstr * (envt - v)^2)
+
+    double k= carrying_capacity(envt);
+    
+    return(
+            exp(-parms.ct * t * t) * 
+            exp(-parms.vstrength * (envt - v) * (envt - v)) * k
+            );
+} // void Simulation::male_survival_probability(Individual &male_i)
+
+
+double Simulation::female_survival_probability(double envt, Individual &female_i)
+{
+    // express ornament locus
+    double p = female_i.p_loc[0] + female_i.p_loc[1];
+
+    // express local adaptation locus
+    double v = female_i.v_env[0] + female_i.v_env[1];
+
+    double k= carrying_capacity(envt);
+
+    // preference based survival is exp(-cp * p^2) as in Iwasa et al 1991
+    // Evolution 45: 1431
+    //
+    // viability based survival is based on local adaptation, where a
+    // good match with the local environment raises survival prospects
+    // according to a bell shaped function exp(-vstr * (envt - v)^2)
+    return(
+            exp(-parms.cp * p * p) * 
+            exp(-parms.vstrength * (envt - v) * (envt - v)) * k
+            );
+}
 
 // survival based on carrying capacity
 void Simulation::survive_carrying_capacity()
 {
-    // auxiliary variable containing the carrying capacity of a patch
-    double k;
+    // reset the stats that measures survival rates
+    mean_survivors_f = 0;
+    mean_survivors_m = 0;
 
-    int nmales_sampled;
-    int nfemales_sampled;
 
-    int mean_survivors_f = 0;
-    int mean_survivors_m = 0;
-
-    std::unordered_set<int> males_sampled;
-    std::unordered_set<int> females_sampled;
-
+    // vectors containing those males and females that survive
+    // these have to be cleared when iterating over patches
+    // otherwise survivors in one patch carry over to the next patch
     std::vector<Individual> surviving_males;
     std::vector<Individual> surviving_females;
+    
+    // aux variable containing the local envt 
+    double envt;
 
     // go through all the patches and perform births
     for (unsigned patch_idx = 0; patch_idx < metapop.size(); ++patch_idx)
     {
+        envt = metapop[patch_idx].coordinate;
+
+        // survivors have to be cleared when starting to 
+        // do survival business in the new patch
         surviving_males.clear();
         surviving_females.clear();
 
-
-        // survival probability based on carrying capacity
-        k = carrying_capacity(metapop[patch_idx].coordinate);
-
-        if (metapop[patch_idx].males.size() > 0)
+        for (std::vector<Individual>::iterator male_iter = metapop[patch_idx].males.begin(); 
+                male_iter != metapop[patch_idx].males.end(); 
+                ++male_iter)
         {
-            // sample surviving males and females
-            // how many males will survive?
-            // make a binomial distribution 
-            // with parameters 
-            // 1) the number of males
-            // 2) the probability of surviving, k 
-            std::binomial_distribution<int> nmale_sample_dist(
-                    metapop[patch_idx].males.size()
-                    ,k);
-
-            nmales_sampled = nmale_sample_dist(rng_r);
-
-            sample_k_out_of_n(metapop[patch_idx].males.size() - 1
-                    ,nmales_sampled
-                    ,males_sampled);
-
-            // loop through all males and have them survive
-            for (std::unordered_set<int>::iterator males_iter = males_sampled.begin();
-                    males_iter != males_sampled.end();
-                    ++males_iter)
+            if (uniform(rng_r) < male_survival_probability(envt, *male_iter))
             {
-                surviving_males.push_back(metapop[patch_idx].males[*males_iter]);
+                surviving_males.push_back(*male_iter);
             }
         }
 
-        if (metapop[patch_idx].females.size() > 0)
+        for (std::vector<Individual>::iterator female_iter = metapop[patch_idx].females.begin(); 
+                female_iter != metapop[patch_idx].females.end(); 
+                ++female_iter)
         {
-            // now the females
-            std::binomial_distribution<int> nfemale_sample_dist(
-                    metapop[patch_idx].females.size()
-                    ,k);
-
-            nfemales_sampled = nfemale_sample_dist(rng_r);
-
-            sample_k_out_of_n(metapop[patch_idx].males.size() - 1
-                    ,nfemales_sampled
-                    ,females_sampled);
-
-            // loop through all males and have them survive
-            for (std::unordered_set<int>::iterator females_iter = females_sampled.begin();
-                    females_iter != females_sampled.end();
-                    ++females_iter)
+            if (uniform(rng_r) < female_survival_probability(envt, *female_iter))
             {
-                surviving_females.push_back(metapop[patch_idx].females[*females_iter]);
+                surviving_females.push_back(*female_iter);
             }
         }
 
-        // keep survivors
-        metapop[patch_idx].males = surviving_males;
         metapop[patch_idx].females = surviving_females;
+        metapop[patch_idx].males = surviving_males;
 
         mean_survivors_f += metapop[patch_idx].females.size();
         mean_survivors_m += metapop[patch_idx].males.size();
+
     } // end for unsigned patch_idx
-      //
+    
+    
     mean_survivors_f /= metapop.size();
     mean_survivors_m /= metapop.size();
 } // Simulation::survive_carrying_capacity
@@ -209,31 +227,6 @@ double Simulation::carrying_capacity(double const coordinate)
                     (coordinate - 0.5)/(2 * parms.sigma_k * parms.sigma_k))));
 }
 
-// sample k out of n individuals
-// this is floyd's algorithm, see
-// https://stackoverflow.com/questions/28287138/c-randomly-sample-k-numbers-from-range-0n-1-n-k-without-replacement 
-void Simulation::sample_k_out_of_n(
-        int const N
-        ,int const k
-        ,std::unordered_set<int> &individuals_sampled)
-{
-    individuals_sampled.clear();
-
-    for (int r = N - k; r < N; ++r)
-    {
-        int v = std::uniform_int_distribution<int>(0,r)(rng_r);
-
-        // second tells you whether v was successfully inserted
-        // into the unordered set elems. However, if v was already
-        // in elems previously, it will not be inserted again (coz, sets)
-        // and then second is false
-        if (!individuals_sampled.insert(v).second)
-        {
-            individuals_sampled.insert(r);
-        }
-    }
-}
-
 // competition among males dependent on hawk dove game
 void Simulation::male_male_competition()
 {}
@@ -245,15 +238,42 @@ void Simulation::female_choice()
             patch_iter != metapop.end(); 
             ++patch_iter)
     {
-        std::cout << patch_iter->females.size() << " ";
-        std::cout << patch_iter->males.size() << " " << std::endl;
         for (std::vector<Individual>::iterator female_iter = patch_iter->females.begin(); 
                 female_iter != patch_iter->females.end(); 
                 ++female_iter)
         {
-        }
-    }
-}
+            std::vector<double> attractiveness_values;
+            // loop through males and make distribution of all male attractiveness values
+            for (std::vector<Individual>::iterator male_iter = patch_iter->males.begin(); 
+                    male_iter != patch_iter->males.end(); 
+                    ++male_iter)
+            {
+                // calculate attractiveness and add this to a vector
+                attractiveness_values.push_back(
+                        calculate_attractiveness(*female_iter, *male_iter)
+                        );
+            }
+
+            std::discrete_distribution(attractiveness_values.begin()
+                    ,attractiveness_values.end());
+        } // end for female
+    } // end for patch
+} // end Simulation::female_choice()
+
+double Simulation::calculate_attractiveness(Individual &female
+        Individual &male)
+{
+    // express ornament
+    p = female.p_loc[0] + female.p_loc[1];
+
+    // express viability
+    v = male.v_loc[0] + male.v_loc[1];
+
+    // express male ornament as a handicap trait
+    // hence we assume s = t + tcond * v
+    s = (male.t_loc[0] + male.t_loc[1]) + (male.t_loc_hand[0] + male.t_loc_hand[1]) * 
+    return(exp(parms.a * p * 
+} // end Simulation::calculate_attractiveness
 
 // produce a bunch of offspring
 void Simulation::offspring_production()
