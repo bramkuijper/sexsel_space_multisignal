@@ -14,6 +14,12 @@ class Individual
         // based on local adaptation
         double p_loc[2] = {0.0,0.0};
 
+        // signaling how strongly ornament size should scale with
+        // local adaptation. This trait is analagous to t' in
+        // eq (1) in Iwasa Pomiankowski 1994 Evolution 48: 853-867
+        // whereas t_loc above is analagous to t in that eq (1)
+        double t_loc_conddep[2] = {0.0,0.0};
+
 
         // ornament locus reflecting male-male competition
         double t_comp[2] = {0.0,0.0};

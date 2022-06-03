@@ -19,7 +19,6 @@ class Simulation
 {
     private:
         std::ofstream output_file;
-
         std::random_device rd;
         std::mt19937 rng_r;
         std::uniform_real_distribution<double> uniform;

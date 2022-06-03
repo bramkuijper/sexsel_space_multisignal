@@ -46,20 +46,64 @@ Simulation::Simulation(Parameters const &parameters) :
     write_parameters();
 } // Simulation::Simulation()
 
-
+// write the parameters to a file
 void Simulation::write_parameters()
 {
     output_file << std::endl
         << std::endl
         << "nm;" << parms.nm << std::endl
         << "nf;" << parms.nf << std::endl;
+        << "ct;" << parms.ct << std::endl
+        << "cp;" << parms.cp << std::endl;
+        << "npatches;" << parms.Npatches << std::endl;
+        << "d;" << parms.d << std::endl;
+        << "k0;" << parms.k0 << std::endl;
+        << "sigma_k;" << parms.sigma_k << std::endl;
 } // write_parameters()
 
+// write the stats to a file
 void Simulation::write_data()
 {
+    // set up variables to take stats
+    double mean_t = 0;
+    double var_t = 0;
+
+    double mean_t_conddep = 0;
+    double var_t_condep = 0;
+
+    double mean_p = 0;
+    double var_p = 0;
+
+    double mean_v = 0;
+    double var_v = 0;
+    
+    double mean_s = 0;
+    double var_s = 0;
+
+    double p,t,tpr,v,s;
+
+    // go through all the patches and perform choice
+    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
+            patch_iter != metapop.end(); 
+            ++patch_iter)
+    {
+        for (std::vector<Individual>::iterator female_iter = patch_iter->females.begin(); 
+                female_iter != patch_iter->females.end(); 
+                ++female_iter)
+        {
+            p = female_iter->p_loc[0] + female_iter->p_loc[1];
+            t = female_iter->t[0] + female_iter->t[1];
+            tpr = female_iter->t_conddep[0] + female_iter->t_conddep[1];
+            v = female_iter->v_env[0] + female_iter->v_env[1];
+            s = t + tpr * v;
+
+        }
+
+
     output_file << time_step << ";"
         << mean_survivors_f << ";"
         << mean_survivors_m << ";";
+
 
     output_file << std::endl;
 } // end Simulation::write_data()
@@ -121,7 +165,7 @@ double Simulation::male_survival_probability(double envt, Individual &male_i)
     // ornament based survival is exp(-ct * t^2) as in Iwasa et al 1991
     // Evolution 45: 1431
     //
-    // this is a revealing handicap - see p1437 2nd column, last paragraph
+    // this is a revealing conddepicap - see p1437 2nd column, last paragraph
     //
     // viability based survival is based on local adaptation, where a
     // good match with the local environment raises survival prospects
@@ -243,6 +287,7 @@ void Simulation::female_choice()
                 ++female_iter)
         {
             std::vector<double> attractiveness_values;
+
             // loop through males and make distribution of all male attractiveness values
             for (std::vector<Individual>::iterator male_iter = patch_iter->males.begin(); 
                     male_iter != patch_iter->males.end(); 
@@ -250,12 +295,18 @@ void Simulation::female_choice()
             {
                 // calculate attractiveness and add this to a vector
                 attractiveness_values.push_back(
-                        calculate_attractiveness(*female_iter, *male_iter)
+                        calculate_attractiveness(*female_iter, *male_iter, patch_iter->coordinate)
                         );
             }
 
-            std::discrete_distribution(attractiveness_values.begin()
+            // set up a probability distribution of all the males and choose from them
+            // males with larger attractiveness values are more likely to be chosen
+            std::discrete_distribution<int> choose_male_dist(attractiveness_values.begin()
                     ,attractiveness_values.end());
+
+            // actually
+            male_chosen = choose_male_dist(rng_r);
+
         } // end for female
     } // end for patch
 } // end Simulation::female_choice()
@@ -264,15 +315,18 @@ double Simulation::calculate_attractiveness(Individual &female
         Individual &male)
 {
     // express ornament
-    p = female.p_loc[0] + female.p_loc[1];
+    double p = female.p_loc[0] + female.p_loc[1];
+    double t = male.t_loc[0] + male.t_loc[1];
+    double tprime = male.t_loc_conddep[0] + male.t_loc_conddep[1];
+    double v = male.v_env[0] + male.v_env[1];
 
-    // express viability
-    v = male.v_loc[0] + male.v_loc[1];
-
-    // express male ornament as a handicap trait
+    // express male ornament as a condition-dependent trait
     // hence we assume s = t + tcond * v
-    s = (male.t_loc[0] + male.t_loc[1]) + (male.t_loc_hand[0] + male.t_loc_hand[1]) * 
-    return(exp(parms.a * p * 
+    // see eq (1) in Iwasa Pomiankowski 1994 Evolution 48: 853-867
+    double s = t + tprime * v;
+
+    // using open - ended preferences
+    return(exp(parms.a * p * s));
 } // end Simulation::calculate_attractiveness
 
 // produce a bunch of offspring
