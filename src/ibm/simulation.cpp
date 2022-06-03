@@ -34,8 +34,9 @@ Simulation::Simulation(Parameters const &parameters) :
         // 2. male-male competition
         female_choice();
 
-        offspring_production();
-
+        // have offspring disperse across space and have them
+        // replace fathers and mothers
+        dispersal_and_replacement();
 
         if (time_step % parms.output_interval == 0)
         {
@@ -52,12 +53,22 @@ void Simulation::write_parameters()
     output_file << std::endl
         << std::endl
         << "nm;" << parms.nm << std::endl
-        << "nf;" << parms.nf << std::endl;
+        << "nf;" << parms.nf << std::endl
+        << "a;" << parms.a << std::endl
         << "ct;" << parms.ct << std::endl
-        << "cp;" << parms.cp << std::endl;
-        << "npatches;" << parms.Npatches << std::endl;
-        << "d;" << parms.d << std::endl;
-        << "k0;" << parms.k0 << std::endl;
+        << "cp;" << parms.cp << std::endl
+        << "clutch_size;" << parms.clutch_size << std::endl
+
+        << "mu_p;" << parms.mu_p << std::endl
+        << "mu_t;" << parms.mu_t << std::endl
+        << "mu_t_conddep;" << parms.mu_t_conddep << std::endl
+        << "mu_v;" << parms.mu_v << std::endl
+        << "sdmu;" << parms.sdmu << std::endl
+
+        << "npatches;" << parms.Npatches << std::endl
+        << "d;" << parms.d << std::endl
+        << "k0;" << parms.k0 << std::endl
+        << "a;" << parms.a << std::endl
         << "sigma_k;" << parms.sigma_k << std::endl;
 } // write_parameters()
 
@@ -69,7 +80,7 @@ void Simulation::write_data()
     double var_t = 0;
 
     double mean_t_conddep = 0;
-    double var_t_condep = 0;
+    double var_t_conddep = 0;
 
     double mean_p = 0;
     double var_p = 0;
@@ -81,6 +92,7 @@ void Simulation::write_data()
     double var_s = 0;
 
     double p,t,tpr,v,s;
+    int n = 0;
 
     // go through all the patches and perform choice
     for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
@@ -97,13 +109,81 @@ void Simulation::write_data()
             v = female_iter->v_env[0] + female_iter->v_env[1];
             s = t + tpr * v;
 
-        }
+            mean_p += p;
+            var_p += p * p;
 
+            mean_t += t;
+            var_t += t * t;
+            
+            mean_t_conddep += tpr;
+            var_t_conddep += tpr * tpr;
+
+            mean_v += v;
+            var_v += v * v;
+
+            mean_s += s;
+            var_s += s * s;
+        } // end iterate over females
+        
+        for (std::vector<Individual>::iterator male_iter = patch_iter->males.begin(); 
+                male_iter != patch_iter->males.end(); 
+                ++male_iter)
+        {
+            p = male_iter->p_loc[0] + male_iter->p_loc[1];
+            t = male_iter->t[0] + male_iter->t[1];
+            tpr = male_iter->t_conddep[0] + male_iter->t_conddep[1];
+            v = male_iter->v_env[0] + male_iter->v_env[1];
+            s = t + tpr * v;
+
+            mean_p += p;
+            var_p += p * p;
+
+            mean_t += t;
+            var_t += t * t;
+            
+            mean_t_conddep += tpr;
+            var_t_conddep += tpr * tpr;
+
+            mean_v += v;
+            var_v += v * v;
+
+            mean_s += s;
+            var_s += s * s;
+        } // end iterate over males
+    
+        n += patch_iter->males.size() + patch_iter->females.size();
+    } // end iterate over patches
+
+
+    mean_p /= n;
+    mean_t /= n;
+    mean_t_conddep /= n;
+    mean_s /= n;
+    mean_v /= n;
+
+    // variance is 
+    var_p = var_p / n - mean_p * mean_p;
+    var_t = var_t / n - mean_t * mean_t;
+    var_t_conddep = var_t_conddep / n - mean_t_conddep * mean_t_conddep;
+    var_s = var_s / n - mean_s * mean_s;
+    var_v  = var_v / n - mean_v * mean_v;
 
     output_file << time_step << ";"
         << mean_survivors_f << ";"
-        << mean_survivors_m << ";";
+        << mean_survivors_m << ";"
 
+
+        << mean_p << ";"
+        << mean_t << ";"
+        << mean_t_conddep << ";"
+        << mean_s << ";"
+        << mean_v << ";"
+
+        << var_p << ";"
+        << var_t << ";"
+        << var_t_conddep << ";"
+        << var_s << ";"
+        << var_v << ";";
 
     output_file << std::endl;
 } // end Simulation::write_data()
@@ -112,7 +192,7 @@ void Simulation::write_data()
 // initialize the data files used to output the simulation results
 void Simulation::initialize_output_file()
 {
-    output_file << "generation;mean_survivors_f;mean_survivors_m;mean_p_loc;mean_t_loc;mean_p_comp;mean_t_comp;mean_envt;mean_v_env;" << std::endl;
+    output_file << "generation;mean_survivors_f;mean_survivors_m;mean_p;mean_t;mean_t_conddep;mean_s;mean_v;var_p;var_t;var_t_conddep;var_s;var_v;" << std::endl;
 }// end Simulation::initialize_output_files()
 
 // initialize all their patches 
@@ -129,7 +209,8 @@ void Simulation::initialize_patches()
         // of the individual
         Individual a_individual(
                     parms.p_loc_init
-                    ,parms.t_loc_init
+                    ,parms.t_init
+                    ,parms.t_conddep_init
                     ,parms.p_comp_init
                     ,parms.t_comp_init
                     ,parms.v_env_init
@@ -157,7 +238,7 @@ void Simulation::initialize_patches()
 double Simulation::male_survival_probability(double envt, Individual &male_i)
 {
     // express ornament locus
-    double t = male_i.t_loc[0] + male_i.t_loc[1];
+    double t = male_i.t[0] + male_i.t[1];
 
     // express local adaptation locus
     double v = male_i.v_env[0] + male_i.v_env[1];
@@ -272,52 +353,95 @@ double Simulation::carrying_capacity(double const coordinate)
 }
 
 // competition among males dependent on hawk dove game
+// we are not going to implement this yet, first focus on 
+// female choice and carrying capacity only
 void Simulation::male_male_competition()
 {}
 
+// females choose males and make kids
 void Simulation::female_choice()
 {
+    // make a distribution to sample either allele 1 vs allele 2 
+    // when inheriting
+    std::bernoulli_distribution diploid_sampler{0.5};
+
+    int male_chosen;
+
     // go through all the patches and perform choice
-    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
-            patch_iter != metapop.end(); 
-            ++patch_iter)
+//    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
+//            patch_iter != metapop.end(); 
+//            ++patch_iter)
+    for (int patch_idx = 0;
+            patch_idx < metapop.size(); 
+            ++patch_idx)
     {
-        for (std::vector<Individual>::iterator female_iter = patch_iter->females.begin(); 
-                female_iter != patch_iter->females.end(); 
+        // remove any previous juveniles
+        // as we are going to add new ones
+        metapop[patch_idx].juveniles.clear();
+
+        for (std::vector<Individual>::iterator female_iter = 
+                metapop[patch_idx].females.begin(); 
+                female_iter != metapop[patch_idx].females.end(); 
                 ++female_iter)
         {
             std::vector<double> attractiveness_values;
 
-            // loop through males and make distribution of all male attractiveness values
-            for (std::vector<Individual>::iterator male_iter = patch_iter->males.begin(); 
-                    male_iter != patch_iter->males.end(); 
+            // loop through males and make a distribution 
+            // of all the attractiveness values
+            for (std::vector<Individual>::iterator male_iter = 
+                    metapop[patch_idx].males.begin(); 
+                    male_iter != metapop[patch_idx].males.end(); 
                     ++male_iter)
             {
                 // calculate attractiveness and add this to a vector
                 attractiveness_values.push_back(
-                        calculate_attractiveness(*female_iter, *male_iter, patch_iter->coordinate)
+                        calculate_attractiveness(*female_iter, *male_iter)
                         );
-            }
+            } // end iterate over all males
 
-            // set up a probability distribution of all the males and choose from them
-            // males with larger attractiveness values are more likely to be chosen
-            std::discrete_distribution<int> choose_male_dist(attractiveness_values.begin()
+            // set up a probability distribution of all the attractiveness
+            // values and choose from them
+            // males with larger attractiveness values 
+            // are more likely to be chosen
+            std::discrete_distribution<int> choose_male_dist(
+                    attractiveness_values.begin()
                     ,attractiveness_values.end());
 
-            // actually
+            // now sample a male from this distribution
             male_chosen = choose_male_dist(rng_r);
 
-        } // end for female
+            // make sure this gives a sensible value
+            assert(male_chosen >= 0);
+            assert(male_chosen < metapop[patch_idx].males.size());
+
+            for (int egg_idx = 0; egg_idx < parms.clutch_size; ++egg_idx)
+            {
+                // make offspring from mom and dad
+                // see the individual.hpp's offspring constructor
+                Individual kid(*female_iter
+                        ,metapop[patch_idx].males[male_chosen]
+                        ,rng_r
+                        ,diploid_sampler
+                        );
+                
+                kid.mutate(rng_r,parms);
+
+                // now have this pair produce offspring
+                metapop[patch_idx].juveniles.push_back(kid);
+            }
+        } // end iterate over all males
     } // end for patch
 } // end Simulation::female_choice()
 
+
+// calculate attractiveness values
 double Simulation::calculate_attractiveness(Individual &female
-        Individual &male)
+        ,Individual &male)
 {
     // express ornament
     double p = female.p_loc[0] + female.p_loc[1];
-    double t = male.t_loc[0] + male.t_loc[1];
-    double tprime = male.t_loc_conddep[0] + male.t_loc_conddep[1];
+    double t = male.t[0] + male.t[1];
+    double tprime = male.t_conddep[0] + male.t_conddep[1];
     double v = male.v_env[0] + male.v_env[1];
 
     // express male ornament as a condition-dependent trait
@@ -329,8 +453,17 @@ double Simulation::calculate_attractiveness(Individual &female
     return(exp(parms.a * p * s));
 } // end Simulation::calculate_attractiveness
 
-// produce a bunch of offspring
-void Simulation::offspring_production()
-{
 
+void Simulation::dispersal_and_replacement()
+{
+    // go through all the patches and make a distribution of 
+    // juveniles that we will sample when a dispersal event happens
+    //
+    // patches with lots of juveniles
+    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
+            patch_iter != metapop.end(); 
+            ++patch_iter)
+    {
+
+    }
 }

@@ -49,8 +49,6 @@ class Simulation
 
         void female_choice();
 
-        void offspring_production();
-
         double carrying_capacity(double const environment_location);
 
         double female_survival_probability(double envt, Individual &female_i);
@@ -62,6 +60,8 @@ class Simulation
 
         void write_data();
         void write_parameters();
+
+        void dispersal_and_replacement();
 }; // end Simulation class definition
 
 #endif

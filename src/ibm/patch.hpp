@@ -11,6 +11,7 @@ class Patch
         // the population of males and females
         std::vector<Individual> males;
         std::vector<Individual> females;
+        std::vector<Individual> juveniles;
 
         double coordinate;
 
