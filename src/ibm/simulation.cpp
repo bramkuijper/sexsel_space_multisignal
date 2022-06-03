@@ -466,57 +466,107 @@ void Simulation::dispersal_and_replacement()
             patch_iter != metapop.end(); 
             ++patch_iter)
     {
-        dispersal_vector.append(patch_iter->juveniles.size());
+        dispersal_vector.push_back(patch_iter->juveniles.size());
     }
 
     // make a dispersal probabilitty distribution
     // so that patches with more juveniles are more likely to be 
     // sampled when sampling immigrants
-    std::discrete_distribution<int> patch_of_origin_sampler{dispersal.vector.begin()
-        ,dispersal.vector.end()};
+    std::discrete_distribution<int> patch_of_origin_sampler{dispersal_vector.begin()
+        ,dispersal_vector.end()};
+
+    int patch_of_origin_idx, sampled_juvenile_idx;
 
     // ok, now sample juveniles either from local or remote populations
-    for (std::vector<Patch>::iterator patch_iter = metapop.begin(); 
-            patch_iter != metapop.end(); 
-            ++patch_iter)
+    for (int patch_idx = 0;
+            patch_idx < metapop.size(); 
+            ++patch_idx)
     {
         // remove current males and females
-        patch_iter->males.clear();
-        patch_iter->females.clear();
+        metapop[patch_idx].males.clear();
+        metapop[patch_idx].females.clear();
 
-        // now get new males and females
+        // first sample males from the juvenile population
         for (int male_idx = 0; male_idx < parms.nm; ++male_idx)
         {
+            // no locals available?
+            // or fate determines we need a dispersing offspring?
+            //
             // get immigrant offspring
-            if (patch_iter->juveniles.size() < 1 ||
+            if (metapop[patch_idx].juveniles.size() < 1 ||
                     uniform(rng_r) < parms.d)
             {
                 // sample a patch of origin
-                patch_of_origin = patch_of_origin_sampler(rng_r);
+                patch_of_origin_idx = patch_of_origin_sampler(rng_r);
 
                 // some bounds checking
-                assert(patch_of_origin >= 0);
-                assert(patch_of_origin <  metapop.size());
+                assert(patch_of_origin_idx >= 0);
+                assert(patch_of_origin_idx <  metapop.size());
 
 
                 // make a random distribution to sample a juvenile
                 // from this remote patch
-                std::uniform_int_distribution juvenile_sampler{0, 
-                    metapop[patch_of_origin].juveniles.size() - 1};
+                std::uniform_int_distribution juvenile_sampler(0, 
+                    (int)metapop[patch_of_origin_idx].juveniles.size() - 1);
 
                 // draw a number from this distribution
                 sampled_juvenile_idx = juvenile_sampler(rng_r);
                 
-                // add juvenile to the stack of males
-                patch_iter->males.push_back(
-                        *metapop[patch_of_origin].juveniles[sampled_juvenile_idx]);
             }
             else
             {
-                
-            }
-        }
-    }
-    
+                patch_of_origin_idx = patch_idx;
 
+                std::uniform_int_distribution juvenile_sampler(0, 
+                    (int)metapop[patch_of_origin_idx].juveniles.size() - 1);
+
+                sampled_juvenile_idx = juvenile_sampler(rng_r);
+            }
+            
+            // add juvenile to the stack of males
+            metapop[patch_of_origin_idx].males.push_back(
+                    metapop[patch_of_origin_idx].juveniles[sampled_juvenile_idx]);
+        }
+        
+        for (int female_idx = 0; female_idx < parms.nf; ++female_idx)
+        {
+            // no locals available?
+            // or fate determines we need a dispersing offspring?
+            //
+            // get immigrant offspring
+            if (metapop[patch_idx].juveniles.size() < 1 ||
+                    uniform(rng_r) < parms.d)
+            {
+                // sample a patch of origin
+                patch_of_origin_idx = patch_of_origin_sampler(rng_r);
+
+                // some bounds checking
+                assert(patch_of_origin_idx >= 0);
+                assert(patch_of_origin_idx <  metapop.size());
+
+
+                // make a random distribution to sample a juvenile
+                // from this remote patch
+                std::uniform_int_distribution juvenile_sampler(0, 
+                    (int)metapop[patch_of_origin_idx].juveniles.size() - 1);
+
+                // draw a number from this distribution
+                sampled_juvenile_idx = juvenile_sampler(rng_r);
+            }
+            else
+            {
+                patch_of_origin_idx = patch_idx;
+
+                std::uniform_int_distribution juvenile_sampler(0, 
+                    (int)metapop[patch_of_origin_idx].juveniles.size() - 1);
+
+                sampled_juvenile_idx = juvenile_sampler(rng_r);
+            }
+            
+            // add juvenile to the stack of females 
+            metapop[patch_of_origin_idx].females.push_back(
+                    metapop[patch_of_origin_idx].juveniles[sampled_juvenile_idx]);
+        }
+        
+    }
 } // Simulation::dispersal_and_replacement()
