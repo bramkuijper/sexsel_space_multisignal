@@ -379,6 +379,14 @@ void Simulation::female_choice()
         // as we are going to add new ones
         metapop[patch_idx].juveniles.clear();
 
+        // patch extinct, hence this patch will not produce offspring
+        // continue to the next patch
+        if (metapop[patch_idx].females.size() == 0 || 
+                metapop[patch_idx].males.size() == 0)
+        {
+            continue;
+        }
+
         for (std::vector<Individual>::iterator female_iter = 
                 metapop[patch_idx].females.begin(); 
                 female_iter != metapop[patch_idx].females.end(); 
@@ -399,6 +407,7 @@ void Simulation::female_choice()
                         );
             } // end iterate over all males
 
+            assert(attractiveness_values.size() == metapop[patch_idx].males.size());
             // set up a probability distribution of all the attractiveness
             // values and choose from them
             // males with larger attractiveness values 
