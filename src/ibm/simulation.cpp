@@ -245,8 +245,6 @@ void Simulation::female_choice()
             patch_iter != metapop.end(); 
             ++patch_iter)
     {
-        std::cout << patch_iter->females.size() << " ";
-        std::cout << patch_iter->males.size() << " " << std::endl;
         for (std::vector<Individual>::iterator female_iter = patch_iter->females.begin(); 
                 female_iter != patch_iter->females.end(); 
                 ++female_iter)
