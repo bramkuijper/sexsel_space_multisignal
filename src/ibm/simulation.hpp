@@ -9,6 +9,7 @@
 #include <ctime>
 #include <string>
 #include "patch.hpp"
+#include "individual.hpp"
 #include "parameters.hpp"
 
 
@@ -18,7 +19,6 @@ class Simulation
 {
     private:
         std::ofstream output_file;
-
         std::random_device rd;
         std::mt19937 rng_r;
         std::uniform_real_distribution<double> uniform;
@@ -49,19 +49,19 @@ class Simulation
 
         void female_choice();
 
-        void offspring_production();
-
         double carrying_capacity(double const environment_location);
 
-        // sample k individuals out of n
-        void sample_k_out_of_n(
-                int const N
-                ,int const k
-                ,std::unordered_set<int> &individuals_sampled);
+        double female_survival_probability(double envt, Individual &female_i);
+        double male_survival_probability(double envt, Individual &male_i);
 
+        double calculate_attractiveness(
+                Individual &female
+                ,Individual &male);
 
         void write_data();
         void write_parameters();
+
+        void dispersal_and_replacement();
 }; // end Simulation class definition
 
 #endif
