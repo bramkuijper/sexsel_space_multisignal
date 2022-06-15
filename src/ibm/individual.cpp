@@ -1,6 +1,7 @@
 #include <random>
 #include "individual.hpp"
 
+// default constructor
 Individual::Individual()
 {}
 
