@@ -29,7 +29,7 @@ struct Parameters
     // see Iwasa et al 1991 Evolution 45: 1431
     double a = 1.0;
 
-    int clutch_size = 10;
+    int clutch_size = 0; //Original = 10
 
     // strength of survival selection against ornamentation
     // see Iwasa et al 1991 Evolution 45: 1431
@@ -46,7 +46,7 @@ struct Parameters
 
     // number of males and females
     // per patch
-    unsigned nm = 10;
+    unsigned nm = 10; //Original =10
     unsigned nf = 10;
 
     // number of patches in the population
