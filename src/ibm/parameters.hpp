@@ -29,7 +29,7 @@ struct Parameters
     // see Iwasa et al 1991 Evolution 45: 1431
     double a = 1.0;
 
-    int clutch_size = 0; //Original = 10
+    int clutch_size = 10; //Original = 10
 
     // strength of survival selection against ornamentation
     // see Iwasa et al 1991 Evolution 45: 1431

@@ -12,5 +12,6 @@ int main(int argc, char **argv)
     params.d = atof(argv[2]);
     params.base_name = argv[3];
 
+    // tralala
     Simulation the_sim{params};
 }

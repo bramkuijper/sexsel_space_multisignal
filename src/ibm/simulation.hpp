@@ -27,6 +27,9 @@ class Simulation
         int mean_survivors_f = 0;
         int mean_survivors_m = 0;
 
+        // number of juveniles produced each generation
+        int njuveniles = 0;
+
     public:
 
         Parameters parms;
@@ -47,6 +50,7 @@ class Simulation
 
         void male_male_competition();
 
+        // females choose males and make kids
         void female_choice();
 
         double carrying_capacity(double const environment_location);
