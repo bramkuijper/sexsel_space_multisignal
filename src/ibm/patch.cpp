@@ -24,5 +24,5 @@ Patch::Patch(int const nm
         ) :
     males(nm,a_male)
     ,females(nf,a_female)
-    ,coordinate{coordinate}
+    ,coordinate{envt}
 {}

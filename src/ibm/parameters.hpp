@@ -55,7 +55,7 @@ struct Parameters
     unsigned Npatches = 50;
 
     // dispersal
-    double d = 0.5;
+    double d = 0.1;
 
 
     // baseline carrying capacity
