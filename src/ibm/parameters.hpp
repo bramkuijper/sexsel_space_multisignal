@@ -26,15 +26,17 @@ struct Parameters
     double v_env_init = 0.5;
 
     // efficacy of mate choice
-    // see Iwasa et al 1991 Evolution 45: 1431
-    double a = 1.0;
+    // see Pomiankowski et al 1991 Evolution 45
+    // see Iwasa et al 1991 Evolution 45: 1435
+    double a = 1.0; // this is a in ln Wm below Iwasa's fig 1
 
     int clutch_size = 10; //Original = 10
 
     // strength of survival selection against ornamentation
-    // see Iwasa et al 1991 Evolution 45: 1431
-    double ct = 0.01;
-    double cp = 0.01;
+    // see Pomiankowski et al 1991 Evolution 45
+    // see Iwasa et al 1991 Evolution 45: 1435
+    double ct = 0.01; // this is c in ln Wm below Iwasa's fig 1
+    double cp = 0.01; // this is b in ln Wf below Iwasa's fig 1
 
     double mu_p = 0.01;
     double mu_t = 0.01;
