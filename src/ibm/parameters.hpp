@@ -50,10 +50,10 @@ struct Parameters
     unsigned nf = 10;
 
     // number of patches in the population
-    unsigned Npatches = 50;
+    unsigned Npatches = 50; //Original = 50
 
     // dispersal
-    double d = 0.5;
+    double d = 0; //Original = 0.5
 
 
     // baseline carrying capacity

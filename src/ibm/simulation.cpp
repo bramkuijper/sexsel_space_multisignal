@@ -462,7 +462,7 @@ double Simulation::calculate_attractiveness(Individual &female
     // hence we assume s = t + tcond * v
     // see eq (1) in Iwasa Pomiankowski 1994 Evolution 48: 853-867
     double s = t + tprime * v;
-
+ 
     // using open - ended preferences
     return(exp(parms.a * p * s));
 } // end Simulation::calculate_attractiveness
