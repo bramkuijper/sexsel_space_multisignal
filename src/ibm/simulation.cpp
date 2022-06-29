@@ -9,7 +9,9 @@
 //!                     that contains a collection of all the different
 //!                     parameters that are needed to run the simulation
 Simulation::Simulation(Parameters const &parameters) :
-    rng_r(rd()) // initialize the random number generator with a random_device
+    rd{}
+    ,seed{rd()}
+    ,rng_r{seed}// initialize the random number generator with a random_device
     ,uniform(0.0,1.0) // initialize a uniform (0,1) distribution
     ,output_file(parameters.base_name.c_str())
     ,parms{parameters} // initialize the parameter member variable
@@ -57,6 +59,7 @@ void Simulation::write_parameters()
         << "a;" << parms.a << std::endl
         << "ct;" << parms.ct << std::endl
         << "cp;" << parms.cp << std::endl
+        << "seed;" << seed << std::endl
         << "clutch_size;" << parms.clutch_size << std::endl
 
         << "mu_p;" << parms.mu_p << std::endl

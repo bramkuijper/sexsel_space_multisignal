@@ -19,13 +19,27 @@ class Simulation
 {
     private:
         std::ofstream output_file;
-        std::random_device rd;
-        std::mt19937 rng_r;
-        std::uniform_real_distribution<double> uniform;
         long unsigned time_step;
+        
+        // random device which is used to generate
+        // proper random seeds
+        std::random_device rd;
 
-        int mean_survivors_f = 0;
-        int mean_survivors_m = 0;
+        // store the random seed
+        // we need to store this so that we can output the 
+        // random seed, so that we could 'replay' the exact
+        // same sequence of random numbers for debugging purposes etc
+        unsigned int seed;
+        
+        // random number generator
+        std::mt19937 rng_r;
+        
+        // uniform distribution to compare against probabilities
+        std::uniform_real_distribution<double> uniform;
+
+
+        double mean_survivors_f = 0;
+        double mean_survivors_m = 0;
 
         // number of juveniles produced each generation
         int njuveniles = 0;
