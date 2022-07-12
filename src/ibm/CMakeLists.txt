@@ -36,15 +36,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # call cmake's FetchContent module
 # see https://cmake.org/cmake/help/latest/module/FetchContent.html 
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL "${GOOGLETEST_URL}"
-)
+#include(FetchContent)
+#FetchContent_Declare(
+#    googletest
+#    URL "${GOOGLETEST_URL}"
+#)
+#
+#FetchContent_MakeAvailable(googletest)
 
-FetchContent_MakeAvailable(googletest)
-
-enable_testing()
+#enable_testing()
 add_executable(
     "${EXE_NAME}"
     main.cpp
@@ -62,42 +62,42 @@ target_include_directories(
     )
 
 
-add_executable(
-    "${EXE_NAME_IND_TEST}"
-    individual_tests.cpp
-)
-
-target_link_libraries(
-    "${EXE_NAME_IND_TEST}" 
-    gtest_main
-    sexsel_library
-)
-
-target_include_directories(
-    "${EXE_NAME_IND_TEST}" 
-    PUBLIC
-    "${PROJECT_BINARY_DIR}"
-    )
-
-add_executable(
-    "${EXE_NAME_SIM_TEST}"
-    simulation_tests.cpp
-)
-
-target_link_libraries(
-    "${EXE_NAME_SIM_TEST}" 
-    gtest_main 
-    sexsel_library
-)
-
-
-target_include_directories(
-    "${EXE_NAME_SIM_TEST}" 
-    PUBLIC
-    "${PROJECT_BINARY_DIR}"
-    )
-
-include(GoogleTest)
-gtest_discover_tests("${EXE_NAME_IND_TEST}")
-gtest_discover_tests("${EXE_NAME_SIM_TEST}")
-
+#add_executable(
+#    "${EXE_NAME_IND_TEST}"
+#    individual_tests.cpp
+#)
+#
+#target_link_libraries(
+#    "${EXE_NAME_IND_TEST}" 
+#    gtest_main
+#    sexsel_library
+#)
+#
+#target_include_directories(
+#    "${EXE_NAME_IND_TEST}" 
+#    PUBLIC
+#    "${PROJECT_BINARY_DIR}"
+#    )
+#
+#add_executable(
+#    "${EXE_NAME_SIM_TEST}"
+#    simulation_tests.cpp
+#)
+#
+#target_link_libraries(
+#    "${EXE_NAME_SIM_TEST}" 
+#    gtest_main 
+#    sexsel_library
+#)
+#
+#
+#target_include_directories(
+#    "${EXE_NAME_SIM_TEST}" 
+#    PUBLIC
+#    "${PROJECT_BINARY_DIR}"
+#    )
+#
+#include(GoogleTest)
+#gtest_discover_tests("${EXE_NAME_IND_TEST}")
+#gtest_discover_tests("${EXE_NAME_SIM_TEST}")
+#
